@@ -1,0 +1,76 @@
+## 术语
+
+编程语言中的数据类型、结构体、枚举类型、类、对象、类成员、函数、宏等称为标识符
+
+每个标识符的定义、所在文件中的行位置、所在文件的路径等信息称为标签(tag)。
+
+*ctags* 全称**[Exuberant Ctags](http://ctags.sourceforge.net/)**，是一款著名的用于生成代码标签信息，以便在源文件中定位对象的开源工具，目前已支持C、C++、python等40多种编程语言。
+
+ctags最初内置在vim程序汇总，但随着Vim 6.0的发布，ctags已经脱离Vim成为一个独立的项目。
+
+Vim配合ctags 可以实现更加强大的函数跳转、自动补齐等功能。
+
+
+
+### 一、使用ctags生成tag标签文件实现跳转
+
+假设当前项目共包含3个源文件：main.cpp、my_class.cpp、my_class.h
+
+在当前目录下执行命令`ctags -R`就可以生成当前项目所有源文件对应的tag标签文件
+
+![Vim ctags](https://image.vimjc.com/images/691e0c29gy1fnnitu9wefj20bj044glf.jpg)
+
+此时，再通过Vim打开当前项目的某个源文件，把光标移动到某个标识符上，通过按键 `Ctrl + ]` 就可以跳转到对应的定义位置，命令 `Ctrl + o` 可以回退到原来的位置
+
+如果当前光标下是个局部变量，在Vim命令模式下执行命令 `gd` 就可以跳转到这个局部变量的定义处
+
+![Vim跳转](https://image.vimjc.com/images/691e0c29gy1fnnj08ml3qg20k807x3zq.gif)
+
+默认情况下，生成的tags文件必须在vim运行的**当前目录**才能在vim里面正确跳转
+
+可以在[Vim尾行模式](https://vimjc.com/vim-edit-command.html)或Vim配置文件 `.~/.vimrc` 中通过以下命令显式地指定tag文件路径：
+
+```
+:set tags+=tags文件路径
+```
+
+### 二、ctags参数介绍
+
+ctags 默认并不会提取所有标识符的tag标签，以下命令可以生成更加详细的tag文件
+
+```
+ctags -R --c++-kinds=+p+l+x+c+d+e+f+g+m+n+s+t+u+v --fields=+liaS --extra=+q
+```
+
+使用命令 `ctags --list-kinds=c++` 可列出C++支持生成的标签类型的全量列表(即 *–c++-kinds* 参数的所有值)：
+
+> c    类classes)
+> d    宏定义(macro definitions)
+> e    枚举变量(enumerators)
+> f    函数定义(function definitions)
+> g    枚举类型(enumeration names)
+> l    局部变量(local variables)，默认不提取
+> m    类、结构体、联合体(class, struct, and union members)
+> n    命名空间(namespaces)
+> p    函数原型(function prototypes)，默认不提取
+> s    结构体类型(structure names)
+> t    (typedefs)
+> u    联合体类型(union names)
+> v    变量定义(variable definitions)
+> x    外部变量(external and forward variable declarations)，默认不提取
+
+局部对象、函数声明、外部变量等类型默认不会生成标签，所以在上面的ctags命令中显式加上了这些类型，用于生成所有类型的标签
+
+`fields=+iaS` 表明ctags要求描述的信息
+
+*i* 表示如果有继承(inherit)，则生成的tag文件要标识出其父类；
+*a* 表示如果元素是类成员则生成的tag文件要标明其访问权限(即public、protected、private)
+*S* 表示如果是函数，则生成的tag文件要标识函数的原型(Signature)
+
+`extra=+q` 表示强制要求ctags对同一个语法元素 **再** 记一行(如果某个语法元素是类的一个成员，ctags默认会给其记录一行)，这样可以保证在Vim中多个同名函数可以通过路径不同来区分
+
+------
+
+Vim很多插件(如omnicppcomplete、taglist、showfunc)都是依赖于ctags工具生成的tags标签文件来实现除[Vim自带补齐](https://vimjc.com/vim-auto-complement.html)功能外更强大的自动补齐、跳转等功能，具体插件的使用方法可参考[Vim教程网](https://vimjc.com/)上的其他教程介绍。
+
+如果你觉得每次手工执行 `ctags -R` 命令生成tags文件的方式太麻烦，vim8.0以上用户可以使用[vim-gutentags插件](https://vimjc.com/vim-gutentags.html)自动实时生成tags文件。

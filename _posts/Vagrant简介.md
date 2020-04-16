@@ -1,0 +1,92 @@
+## Vagrant是什么
+
+>  Vagrant是一个软件，可以自动化虚拟机的安装和配置流程。
+>
+> 目前市面上个人PC的主流操作系统不是Windows就是MacOS。对于这些用户，如果需要用Linux环境进行开发或学习，使用虚拟机无疑是最方便的选择。而Vagrant更进一步，可以让你通过编写一个Vagrantfile来控制虚拟机的启动、虚拟机网络环境的配置、虚拟机与主机间的文件共享，以及启动后自动执行一些配置脚本，比如自动执行一个shell script来安装一些必备的开发工具，如Mysql。这意味着，当你需要在多台机器间同步开发进度时，只需要同步Vagrantfile，就可以保证各台机器拥有一致的开发环境。
+>
+> 另外，即便对于计算机小白用户，Vagrant也是一个利器。以前我们为了学习一门语言，必须先手动安装这门语言的编译环境。这期间的各种痛苦想必各位深有体会。有了Vagrant后，我们可以下载别人写好的Vagrantfile，然后运行`vagrant up`，vagrant就会自动下载虚拟机镜像，自动加载镜像并配置虚拟机，然后交给我们一个即开即用的学习环境。这样，由于使用了教师调试好的学习环境，小白们就可以免受环境相关的各种Bug的困扰，这无疑会提高学习效率。
+
+
+
+## 术语
+
+1. **终端**：Windows中指CMD、PowerShell等，MacOS中指Terminal。
+2. `~`：指操作系统的HOME路径。比如Windows10中，假设用户名为abc，那么`~`实际对应的应该是`C:\Users\abc\`。
+3. `[]`：后文会见到形如`commandA [commandB [commandC]]`的指令。一般写在`[]`的都是可选指令。而嵌套的`[]`则表示，更深一级的可选指令只有在上一级的可选指令得到指定后才能指定。比如，之前的指令中，commandC只有在commandB存在时才能出现。
+
+
+
+## Vagrant的依赖程序
+
+既然是配置虚拟机，那么自然需要虚拟机程序和被虚拟的操作系统镜像（Image）。前者常用的选择有VirtualBox和VMWare，后者则包括Ubuntu、FreeBSD等等。Vagrant称前者为`provider`，称后者为`box`。原则上，我们可以自由搭配`provider`和`box`，但由于VirtualBox开源且免费，Vagrant将其作为默认的provider。所以，一般会先安装VirtualBox，再安装Vagrant。
+
+
+
+## Vagrant的基本概念
+
+假设我们使用VirtualBox作为provider。
+
+安装好Vagrant后，新建一个空文件夹，将其路径视作项目的根路径。然后运行终端并进入这个路径，键入`vagrant init`，此文件夹中会多出一个Vagrantfile。用文本编辑器打开后，会发现该文件由ruby语言编写，且大部分行都被注释掉。一般未注释的内容如下：
+
+```ruby
+Vagrant.configure("2") do |config|
+    config.vm.box = "base"
+end 
+```
+
+解释如下：
+
+1. `do...end`结构在ruby中称为块（block），可以简单理解为`Vagrant.configure("2")`执行到某一步时程序被挂起，并将一个需要配置的对象交给块，由块内的语句进行具体配置，当块内的语句依次执行完后，配置好的对象又被交回给`Vagrant.configure("2")`，之前被挂起的程序则继续执行直到完毕。
+2. `.configure("2")`中的`2`是指配置文件的语法规则的版本。虽然是基于ruby，Vagrantfile仍然有一套自己的语法细则。按照时间先后来说，目前（2016年7月）有V1与V2两套配置语法。自然新的语法更先进。所以目前最新版本的Vagrant（1.8.4）默认使用V2规则。也许未来还会有V3、V4……
+3. `config.vm.box`直译过来即“配置虚拟机盒子”，因此这一步指定将要使用哪个虚拟机镜像（box）。接下来详细解释下Vagrant如何管理boxes。
+
+### Box概念
+
+先回忆下虚拟机的基本使用方法。一般我们会从网上下载某个虚拟机的安装镜像到本地，文件名为`***.iso`，然后使用VirtualBox加载镜像并安装操作系统到虚拟机中，期间可能涉及到网卡、USB等虚拟硬件的配置。之后就可以正常的使用这个虚拟的系统了。
+
+这一过程基本类似于使用安装盘在一台真实的电脑上安装系统。但Vagrant使用的镜像并不是待安装的系统镜像，而是从虚拟机中导出的、对已经安装配置好的操作系统的快照，以`.box`作为扩展名。这类似于Windows中完整的系统备份所产生的镜像文件。
+
+`.box`文件不过是个压缩文件包，里面除了基础数据的镜像外，还包括一些元数据文件，用来指导Vagrant将系统镜像正确的加载到对应的provider中。因此，每个`.box`都有自己对应的provider。我们当然可以从最原始的安装镜像开始，一步步制作自己的`.box`镜像。但这一过程比较麻烦，详情可参见官方文档[CREATING A BASE BOX](https://link.jianshu.com?t=https://www.vagrantup.com/docs/boxes/base.html)。幸运的是，Vagrant官网提供了许多制作好的box文件。参见[https://atlas.hashicorp.com/boxes/search](https://link.jianshu.com?t=https://atlas.hashicorp.com/boxes/search)。选择时注意box与provider的对应关系。
+
+
+
+### 如何添加box文件到Vagrant的box管理系统中。
+
+基本语法：`vagrant box add {title} {url}`。其中，title是box文件在Vagrant中的名字，必须唯一。url是box的物理地址，可以是一个网址，也可以是本地的一个文件路径。当url是网址时，vagrant会调用内置的下载模块从服务器下载镜像到本地，Vagrant官网中提供的box都只能通过指定网址在线安装。无论是哪种方式，原始的box文件都会被放在`~\.vagrant.d`路径下。指令`vagrant box list`可以查看所有已添加的box。
+
+添加完box后，便可以将Vagrantfile中的`config.vm.box`赋值为该box的title。另外，你还可以更灵活的指定box。比如，`vagrant init`的完整指令是`vagrant init [options] [name [url]]`。再比如，Vagranfile中也可以给`config.vm.box_url`赋值。
+
+回忆之前自动生成的Vagrantfile，`config.vm.box`被默认赋值为`base`。这意味着当Vagrant调用名为`base`的box且发现本地没有时，它会自动远程安装一个box并命名为`base`。
+
+### Up
+
+前面的章节解释了选项`config.vm.box`。实际上，Vagrantfile中有大量的选项可以指定。其中，比较重要的有`config.vm.share_folder`、`config.vm.network`、`config.vm.provision`等。这一节略过不表。
+
+写好Vagrantfile后，在项目的根目录下运行`vagrant up`，Vagrant便会依据Vagrantfile中的指令来搭建虚拟机环境。
+
+第一步当然是载入box文件。之前说过，添加到Vagrant系统中的box会被统一保存在文件夹`~\.vagrant.d`。而这一步，则是根据指定的box文件中的元数据，使用相关的provider来载入系统镜像。这意味着系统镜像的数据又被复制一遍，并交给provider管理。也就是说，如果我们使用同一个box创建N个开发环境，那么同一份基础数据会被复制N遍。这种处理方式固然造成数据的冗余，但优点也很突出，即保证了每个开发环境的独立性。另外，`vagrant up`只有在第一次执行时才会复制box镜像。而且这之后，如果打开provider程序（这里指VirtualBox），你会看到虚拟机中多了一个以项目所在文件夹的名字为前缀命名的系统镜像。
+
+第一步之后，Vagrant还会进一步完成文件夹共享、网络通信等项目的配置。注意到，除了第一次的up会完整的执行所有指令外，为了节省启动成本，除非显示指定，此后的up中Vagrant会自动跳过那些不需要反复执行的配置指令。
+
+up的逆操作是destroy。顾名思义，在项目的根目录下运行`vagrant destroy`，Vagrant会将box从provider中卸载并删除。但destroy并不会清楚共享文件夹中的内容。所谓共享文件夹，即虚拟机与宿主机间共享的一个文件夹。任何一方均可对该文件夹操作，其更改对另一方实时可见。
+
+### Provision
+
+这一步相当于自动执行“安装各类软件”、“调整系统设置”等步骤。其实，这一步的操作结果可以被打包到box中，从而完全避免Provision。比如，我们既可以在Provision中安装Python，也可以直接将一个已经安装好Python的系统打包为box，然后使用该box创建虚拟机。两种方式各有优劣，显然前者更灵活、更轻量。毕竟，不是所有打包到box中的功能都为用户所需。使用Provision可以最大限度的“按需定制”。
+
+在这一步，Vagrant会可能需要调用第三方的Provision System，比如Chef、Puppet。而最基本的Provision可以通过shell script来指定，反映在Vagrantfile中，便是如下的代码：
+
+
+
+```ruby
+Vagrant.configure("2") do |config|
+  ...
+  config.vm.provision "shell", inline: "echo Hello, World"
+  config.vm.provision "shell", path: "script.sh"
+  ...
+end
+```
+
+其中，`inline`表示script直接写在Vagrantfile中，而`path`则表示script被写在指定的文件中。
+
+Provision可以说是自动装机的核心步骤，Vagrant则提供了一个方便的接口。
