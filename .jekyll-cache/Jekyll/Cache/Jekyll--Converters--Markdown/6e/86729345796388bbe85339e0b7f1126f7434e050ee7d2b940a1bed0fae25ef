@@ -1,0 +1,600 @@
+I"�w<h1 id="modsecurity介绍">Modsecurity介绍</h1>
+
+<blockquote>
+  <p>WAF (Web Application Firewall)，Web 应用防火墙，通过解析 HTTP/HTTPS 请求内容，并执行一系列的安全检测策略，对目标 Web 应用提供安全防护，同时记录相关安全防御日志。文章将介绍 ModSecurity 相关部署配置概念、防御规则及简单地定制化实践。</p>
+</blockquote>
+
+<h2 id="waf-概念简述">WAF 概念简述</h2>
+
+<p>WAF 根据产品形态不同，通常可以分为硬件设备类、软件产品类及云 WAF 类别，相关产品代表如下</p>
+
+<ul>
+  <li>硬件设备类，如绿盟、安恒、启明星辰等厂商生产的 WAF；</li>
+  <li>软件产品类，如 <code class="highlighter-rouge">ModSecurity</code> 、网站安全狗等；</li>
+  <li>云 WAF，如阿里云盾、知道创宇加速乐等；</li>
+</ul>
+
+<p>根据工作原理不同可分为反向代理模式、云 AGENT 模式及容器安全模块形式</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">工作模式</th>
+      <th style="text-align: left">工作原理</th>
+      <th style="text-align: left">优劣分析</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">反向代理模式</td>
+      <td style="text-align: left">修改DNS，让域名解析到反向代理服务器。所有流量经过反向代理进行检测，检测无问题之后再转发给后端的Web服务器</td>
+      <td style="text-align: left">集中式流量出入口，可针对大数据分析，动态添加一层，增加网络开销，站点后端 Web 较多的情况，转发规则比较复杂，流量都被捕捉，涉及敏感数据需要保护</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">云 AGENT 模式</td>
+      <td style="text-align: left">所有请求通过 Web 服务器模块转发到云端进行安全检测，NGINX 根据云端检测结果进行转发，若检测为攻击则执行配置的动作</td>
+      <td style="text-align: left">安全规则统一管理，规则更新只需要更新后端的决策系统，不涉及 Web 服务器端规则更新，根据业务配置规则，需要较高成本，Web 服务器变更时不便于更新</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">容器安全模块</td>
+      <td style="text-align: left">所有请求流量均先经过检测引擎的检测，若未发现攻击，则进行正常业务响应，否则按照配置的动作进行响应</td>
+      <td style="text-align: left">网络结构简单，仅部署容器安全模块，但维护困难，大规模服务器集群，任何更新涉及多台服务器，需部署操作，成本高，无集中化数据中心，安全事件汇总不方便</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="modsecurity-部署">ModSecurity 部署</h2>
+
+<blockquote>
+  <p><code class="highlighter-rouge">Nginx</code> 加载 <code class="highlighter-rouge">ModSecurity</code> 模块安装有两种方式：一种是编译为 <code class="highlighter-rouge">Nginx</code> 静态模块，另一种是通过 <code class="highlighter-rouge">ModSecurity-Nginx Connector</code> 加载动态模块，下面将实践 <code class="highlighter-rouge">ModSecurity-Nginx Connector</code> 动态模块的安装和配置</p>
+</blockquote>
+
+<p>安装编译 <code class="highlighter-rouge">libmodsecurity</code> 依赖库</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>yum install -y pt-utils autoconf automake build-essential git libcurl4-openssl-dev libgeoip-dev liblmdb-dev libpcre++-dev libtool libxml2-dev libyajl-dev pkgconf wget zlib1g-dev doxygen libxml2-devel pcre-devel
+</code></pre></div></div>
+
+<h3 id="编译-libmodsecurity-模块">编译 libmodsecurity 模块</h3>
+
+<p>下载 <code class="highlighter-rouge">libmodsecurity</code> 源码并编译模块</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone --depth 1 -b v3/master --single-branch https://github.com/SpiderLabs/ModSecurity
+cd ModSecurity
+git submodule init
+git submodule update
+./build.sh
+./configure
+make
+make install
+</code></pre></div></div>
+
+<blockquote>
+  <p>若编译安装过程出现如下错误提示，可直接忽略</p>
+
+  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>fatal: No names found, cannot describe anything.
+</code></pre></div>  </div>
+</blockquote>
+
+<h3 id="编译-nginx-connector-模块">编译 nginx connector 模块</h3>
+
+<p>下载 <code class="highlighter-rouge">nginx connector</code> 模块，并编译成动态模块</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git
+</code></pre></div></div>
+
+<blockquote>
+  <p>目标机器已安装 <code class="highlighter-rouge">Nginx</code> ，需确认 <code class="highlighter-rouge">Nginx</code> 版本，并下载指定版本的 <code class="highlighter-rouge">Nginx</code> 源码进行编译，否则可下载任意版本 <code class="highlighter-rouge">Nginx</code> 源码进行编译</p>
+</blockquote>
+
+<p>下载 <code class="highlighter-rouge">Nginx</code> 源码进行编译，编译过程加入 <code class="highlighter-rouge">ModSecurity</code> 依赖库模块</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget http://nginx.org/download/nginx-1.14.1.tar.gz
+tar zxvf nginx-1.14.1.tar.gz
+cd nginx-1.14.1
+./configure --add-dynamic-module=../ModSecurity-nginx
+make modules
+</code></pre></div></div>
+
+<blockquote>
+  <p>网上部分文档编译过程 <code class="highlighter-rouge">configure</code> 添加编译参数 <code class="highlighter-rouge">--with-compat</code> 启用模块兼容性，导致编译后的 <code class="highlighter-rouge">so</code> 模块无法使用(错误提示如下)，去除该选项即可</p>
+
+  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nginx: [emerg] module "/usr/local/nginx/conf/modules/ngx_http_modsecurity_module.so" is not binary compatible in /usr/local/nginx/conf/nginx.conf:11
+</code></pre></div>  </div>
+</blockquote>
+
+<p>将编译成功的 ModSecurity 模块复制到 Nginx 安装目录中，在 Nginx 配置文件中添加如下配置，加载 ModSecurity 模块</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>load_module modules/ngx_http_modsecurity_module.so;
+</code></pre></div></div>
+
+<h3 id="配置-modsecurity-规则">配置 ModSecurity 规则</h3>
+
+<p>下载 <code class="highlighter-rouge">ModSecurity</code> 配置规则</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>mkdir modseucirty
+wget -P xxx/modsecurity/ https://raw.githubusercontent.com/SpiderLabs/ModSecurity/v3/master/modsecurity.conf-recommended
+mv xxx/modsecurity/modsecurity.conf-recommended xxx/modsecurity/modsecurity.conf
+</code></pre></div></div>
+
+<blockquote>
+  <p>在对 <code class="highlighter-rouge">ModSecurity</code> 进行配置时，需要将原 <code class="highlighter-rouge">ModSecurity</code> 文件夹中的 <code class="highlighter-rouge">unicode.mapping</code> 复制到与上述 <code class="highlighter-rouge">modsecurity.conf</code> 文件相同的文件夹中，否则启动 <code class="highlighter-rouge">Nginx</code> 过程会提示文件缺失，如下所示</p>
+
+  <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nginx: [emerg] "modsecurity_rules_file" directive Rules error. File: /usr/local/nginx/conf/modsec/modsecurity.conf. Line: 236. Column: 17. Failed to locate the unicode map file from: unicode.mapping Looking at: 'unicode.mapping', 'unicode.mapping', '/usr/local/nginx/conf/modsec/unicode.mapping', '/usr/local/nginx/conf/modsec/unicode.mapping'.  in /usr/local/nginx/conf/nginx.conf:41
+</code></pre></div>  </div>
+</blockquote>
+
+<p>修改 <code class="highlighter-rouge">ModSecurity</code> 配置文件 <code class="highlighter-rouge">modsecurity.conf</code> 中检测模式 <code class="highlighter-rouge">SecRuleEngine DetectionOnly</code> 为 <code class="highlighter-rouge">SecRuleEngine On</code>，如下图所示</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># -- Rule engine initialization ----------------------------------------------
+
+# Enable ModSecurity, attaching it to every transaction. Use detection
+# only to start with, because that minimises the chances of post-installation
+# disruption.
+#
+#SecRuleEngine DetectionOnly
+SecRuleEngine On
+</code></pre></div></div>
+
+<p>在 <code class="highlighter-rouge">Nginx</code> <code class="highlighter-rouge">Server</code> 配置中开启 <code class="highlighter-rouge">ModSecurity</code> 配置，如下所示</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nginx.conf 配置文件
+
+server {
+    listen       80;
+    server_name  localhost;
+
+    modsecurity on;
+    modsecurity_rules_file /usr/local/nginx/conf/modsec/main.conf;
+
+    location / {
+        root   html;
+        index  index.html index.htm;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   html;
+    }
+}
+
+----------------------------------------------------------------------------------------------
+
+main.conf 配置文件
+
+Include "/usr/local/nginx/conf/modsec/modsecurity.conf"
+# 添加测试规则，当请求中包含参数 testparam 同时其值为 test 时，拦截请求并返回 403
+SecRule ARGS:testparam "@contains test" "id:1234,deny,status:403"
+</code></pre></div></div>
+
+<h3 id="modsecurity-规则测试">ModSecurity 规则测试</h3>
+
+<p><code class="highlighter-rouge">ModSecurity</code> 规则测试如下图所示，当携带参数 <code class="highlighter-rouge">?testparam=test</code> 发起请求时，请求被拒绝</p>
+
+<p><img src="https://l0gs.xf0rk.space/2018/12/21/step-into-modsecurity/modsecurity_testparam_demo.png" alt="img" /></p>
+
+<h2 id="modsecurity-配置简介">ModSecurity 配置简介</h2>
+
+<h3 id="modsecurity-日志配置">ModSecurity 日志配置</h3>
+
+<p><code class="highlighter-rouge">ModSecurity</code> 应用中的日志包括 <code class="highlighter-rouge">Debug</code>（调试日志）、<code class="highlighter-rouge">Audit</code>（审计日志）两大类，调试日志记录 <code class="highlighter-rouge">ModSecurity</code> 规则匹配、检测过程，并依据调试日志相关参数的不同，其所记录的日志字段均不同，调试日志配置如下所示</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">调试日志配置</th>
+      <th style="text-align: left">参数说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">SecDebugLog</td>
+      <td style="text-align: left">调试日志记录路径</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SecDebugLogLevel</td>
+      <td style="text-align: left">调试日志记录等级</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>调试日志记录等级分为 7 个等级，如下所示</p>
+
+<ul>
+  <li>0 不输出日志</li>
+  <li>1 输出错误日志，例如致命的处理错误、阻塞的会话</li>
+  <li>2 记录警告日志，例如非阻塞的规则匹配</li>
+  <li>3 输出通知日志，例如非致命的处理错误</li>
+  <li>4 信息</li>
+  <li>5 详情</li>
+  <li>9 输出所有调试日志</li>
+</ul>
+
+<p>审计日志，可用于输出所有 HTTP 会话日志，其日志数据如下所示</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">日志属性</th>
+      <th style="text-align: left">参数说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">SecAuditEngine</td>
+      <td style="text-align: left">控制审计日志输出，其可选值为 On、Off、RelevantOnly</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SecAuditLogRelevantStatus</td>
+      <td style="text-align: left">待审计的 HTTP 状态码，例如 ^(?:5|4(?!04)) 用于过滤 5xx 或 4xx，排除 404</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SecAuditLogParts</td>
+      <td style="text-align: left">ABCDEFGHIJKZ 所需记录的 HTTP 请求字段</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SecAuditLogType</td>
+      <td style="text-align: left">审计日志类型，可选值为 Serial、Concurrent</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SecAuditLog</td>
+      <td style="text-align: left">记录审计日志路径</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">SecAuditLogStorageDir</td>
+      <td style="text-align: left">Concurrent 审计日志时所输出的目录</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code class="highlighter-rouge">SecAuditLogParts</code> 取值为 <code class="highlighter-rouge">ABCDEFGHIJKZ</code> 说明如下所示</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">日志属性</th>
+      <th style="text-align: left">参数说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">A</td>
+      <td style="text-align: left">审计日志头</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">B</td>
+      <td style="text-align: left">请求头</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">C</td>
+      <td style="text-align: left">请求 Body</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">D</td>
+      <td style="text-align: left">保留</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">E</td>
+      <td style="text-align: left">响应 Body</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">F</td>
+      <td style="text-align: left">响应头</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">G</td>
+      <td style="text-align: left">保留</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">H</td>
+      <td style="text-align: left">审计标记，包含额外审计会话数据</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">I</td>
+      <td style="text-align: left">保留</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">J</td>
+      <td style="text-align: left">保留</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">K</td>
+      <td style="text-align: left">所匹配的规则集合</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">Z</td>
+      <td style="text-align: left">终结标记</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>如下为一段审计日志示例</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>---Xd59KAAO---A--
+[26/Nov/2018:09:46:59 +0800] 154319681942.596956 10.211.55.2 58760 10.211.55.2 80
+---Xd59KAAO---B--
+GET /?testparam=test HTTP/1.1
+Host: 10.211.55.14
+Connection: keep-alive
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+Accept-Encoding: gzip, deflate
+Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7
+If-None-Match: "5bf974af-264"
+If-Modified-Since: Sat, 24 Nov 2018 15:56:31 GMT
+
+---Xd59KAAO---C--
+
+---Xd59KAAO---D--
+
+---Xd59KAAO---E--
+<span class="nt">&lt;html&gt;</span>\x0d\x0a<span class="nt">&lt;head&gt;&lt;title&gt;</span>403 Forbidden<span class="nt">&lt;/title&gt;&lt;/head&gt;</span>\x0d\x0a<span class="nt">&lt;body</span> <span class="na">bgcolor=</span><span class="s">"white"</span><span class="nt">&gt;</span>\x0d\x0a<span class="nt">&lt;center&gt;&lt;h1&gt;</span>403 Forbidden<span class="nt">&lt;/h1&gt;&lt;/center&gt;</span>\x0d\x0a<span class="nt">&lt;hr&gt;&lt;center&gt;</span>nginx/1.14.1<span class="nt">&lt;/center&gt;</span>\x0d\x0a<span class="nt">&lt;/body&gt;</span>\x0d\x0a<span class="nt">&lt;/html&gt;</span>\x0d\x0a<span class="c">&lt;!-- a padding to disable MSIE and Chrome friendly error page --&gt;</span>\x0d\x0a<span class="c">&lt;!-- a padding to disable MSIE and Chrome friendly error page --&gt;</span>\x0d\x0a<span class="c">&lt;!-- a padding to disable MSIE and Chrome friendly error page --&gt;</span>\x0d\x0a<span class="c">&lt;!-- a padding to disable MSIE and Chrome friendly error page --&gt;</span>\x0d\x0a<span class="c">&lt;!-- a padding to disable MSIE and Chrome friendly error page --&gt;</span>\x0d\x0a<span class="c">&lt;!-- a padding to disable MSIE and Chrome friendly error page --&gt;</span>\x0d\x0a
+
+---Xd59KAAO---F--
+HTTP/1.1 403
+Server: nginx/1.14.1
+Date: Mon, 26 Nov 2018 01:46:59 GMT
+Content-Length: 571
+Content-Type: text/html
+Connection: keep-alive
+
+---Xd59KAAO---H--
+
+---Xd59KAAO---I--
+
+---Xd59KAAO---J--
+
+---Xd59KAAO---Z--
+</code></pre></div></div>
+
+<blockquote>
+  <p>在测试 ModSecurity 功能时，想通过 WAF 输出的审计日志来学习和测试相应防护规则，结果发现将 SecRuleEngine 设置为 DetectionOnly 后，ModSecurity 并没有在审计日志中输出匹配过程和规则；正确的做法应该是通过记录调试日志，来跟踪规则匹配、执行。</p>
+</blockquote>
+
+<h2 id="modsecurity-crs-规则">ModSecurity CRS 规则</h2>
+
+<p>ModSecurity <a href="https://github.com/SpiderLabs/owasp-modsecurity-crs">CRS</a> 是由 OWASP 社区所维护的攻击检测规则，可在 ModSecurity 中直接使用，其检测规则覆盖 OWASP Top 10 中常见漏洞和一些框架层面的漏洞。</p>
+
+<h3 id="crs-部署使用">CRS 部署使用</h3>
+
+<p>下载 CRS 规则到本地，可通过如下命令进行操作</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>git clone git@github.com:SpiderLabs/owasp-modsecurity-crs.git
+</code></pre></div></div>
+
+<p>在 CRS 的 <code class="highlighter-rouge">crs-set.conf.example</code> 中说明 CRS 的配置需要在 WebServer 中包含如下三种配置文件</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code># The order of file inclusion in your webserver configuration should always be:
+# 1. modsecurity.conf
+# 2. crs-setup.conf (this file)
+# 3. rules/*.conf (the CRS rule files)
+#
+# Please refer to the INSTALL file for detailed installation instructions.
+</code></pre></div></div>
+
+<p>将下载目录下的 <code class="highlighter-rouge">rules</code> 移动到 <code class="highlighter-rouge">/usr/local/nginx/conf/modsec</code> 目录下，通知将 <code class="highlighter-rouge">crs-set.conf.example</code> 重命名为 <code class="highlighter-rouge">crs-set.conf</code> 并移动到 <code class="highlighter-rouge">/usr/local/nginx/conf/modsec</code>，部署玩 CRS 后的目录如下所示</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[root@Centos7 modsec]# pwd
+/usr/local/nginx/conf/modsec
+[root@Centos7 modsec]# ls
+crs-setup.conf  main.conf  modsecurity.conf  rules  unicode.mapping
+[root@Centos7 modsec]#
+</code></pre></div></div>
+
+<p>在上述 <code class="highlighter-rouge">/usr/local/nginx/conf/modsec/main.conf</code> 配置文件中添加 CRS 配置，添加后的文件内容如下所示</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[root@Centos7 modsec]# cat main.conf
+Include "/usr/local/nginx/conf/modsec/modsecurity.conf"
+Include "/usr/local/nginx/conf/modsec/crs-setup.conf"
+Include "/usr/local/nginx/conf/modsec/rules/*.conf"
+</code></pre></div></div>
+
+<p>测试 CRS 规则，访问连接 <code class="highlighter-rouge">http://10.211.55.14/?id=1'or'1=1</code>，如下所示，触发了 CRS 中的 SQL 注入防御规则</p>
+
+<blockquote>
+  <p>需注意 ModSecurity CRS 规则默认将本机加入白名单，所以直接通过 <code class="highlighter-rouge">curl http://localhost?id=1'or'1=1</code> 测试是无法触发 CRS 防御规则。</p>
+</blockquote>
+
+<p><img src="https://l0gs.xf0rk.space/2018/12/21/step-into-modsecurity/modsecurity_crs.png" alt="img" /></p>
+
+<p>触发 <code class="highlighter-rouge">REQUEST-920-PROTOCOL-ENFORCEMENT</code>、<code class="highlighter-rouge">REQUEST-942-APPLICATION-ATTACK-SQLI.conf</code> 等规则检测，并且被默认拦截，其匹配记录如下所示</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>ModSecurity: Warning. Matched "Operator `Rx' with parameter `^[\d.:]+$' against variable `REQUEST_HEADERS:Host' (Value: `10.211.55.14' ) [file "/usr/local/nginx/conf/modsec/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf"] [line "777"] [id "920350"] [rev "2"] [msg "Host header is a numeric IP address"] [data "10.211.55.14"] [severity "4"] [ver "OWASP_CRS/3.0.0"] [maturity "9"] [accuracy "9"] [tag "application-multi"] [tag "language-multi"] [tag "platform-multi"] [tag "attack-protocol"] [tag "OWASP_CRS/PROTOCOL_VIOLATION/IP_HOST"] [tag "WASCTC/WASC-21"] [tag "OWASP_TOP_10/A7"] [tag "PCI/6.5.10"] [hostname "10.211.55.2"] [uri "/"] [unique_id "154530934235.756485"] [ref "o0,12v37,12"]
+ModSecurity: Warning. detected SQLi using libinjection. [file "/usr/local/nginx/conf/modsec/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf"] [line "43"] [id "942100"] [rev "1"] [msg "SQL Injection Attack Detected via libinjection"] [data "Matched Data: s&amp;s found within ARGS:id: 1'or'1=1"] [severity "2"] [ver "OWASP_CRS/3.0.0"] [maturity "1"] [accuracy "8"] [hostname "10.211.55.2"] [uri "/"] [unique_id "154530934235.756485"] [ref "v9,8"]
+ModSecurity: Access denied with code 403 (phase 2). Matched "Operator `Ge' with parameter `5' against variable `TX:ANOMALY_SCORE' (Value: `8' ) [file "/usr/local/nginx/conf/modsec/rules/REQUEST-949-BLOCKING-EVALUATION.conf"] [line "44"] [id "949110"] [rev ""] [msg "Inbound Anomaly Score Exceeded (Total Score: 8)"] [data ""] [severity "2"] [ver ""] [maturity "0"] [accuracy "0"] [tag "application-multi"] [tag "language-multi"] [tag "platform-multi"] [tag "attack-generic"] [hostname "10.211.55.2"] [uri "/"] [unique_id "154530934235.756485"] [ref ""]
+ModSecurity: Warning. Matched "Operator `Ge' with parameter `5' against variable `TX:INBOUND_ANOMALY_SCORE' (Value: `8' ) [file "/usr/local/nginx/conf/modsec/rules/RESPONSE-980-CORRELATION.conf"] [line "65"] [id "980130"] [rev ""] [msg "Inbound Anomaly Score Exceeded (Total Inbound Score: 8 - SQLI=5,XSS=0,RFI=0,LFI=0,RCE=0,PHPI=0,HTTP=0,SESS=0): SQL Injection Attack Detected via libinjection"] [data ""] [severity "0"] [ver ""] [maturity "0"] [accuracy "0"] [tag "event-correlation"] [hostname "10.211.55.2"] [uri "/"] [unique_id "154530934235.756485"] [ref ""]
+</code></pre></div></div>
+
+<h3 id="crs-规则说明">CRS 规则说明</h3>
+
+<p><code class="highlighter-rouge">/usr/local/nginx/conf/modsec/rules/*.conf</code> 目录下的 CRS 防御规则文件及相关说明如下所示</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">规则文件</th>
+      <th style="text-align: left">规则说明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">REQUEST-900-EXCLUSION-RULES-BEFORE-CRS</td>
+      <td style="text-align: left">定制化个人防护规则，调整规则防护场景</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-901-INITIALIZATION</td>
+      <td style="text-align: left">CRS 配置初始化</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-910-IP-REPUTATION</td>
+      <td style="text-align: left">IP 信誉库</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-911-METHOD-ENFORCEMENT</td>
+      <td style="text-align: left">HTTP 请求方法检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-912-DOS-PROTECTION</td>
+      <td style="text-align: left">拒绝服务规则</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-913-SCANNER-DETECTION</td>
+      <td style="text-align: left">扫描器检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-920-PROTOCOL-ENFORCEMENT</td>
+      <td style="text-align: left">URL Scheme 协议检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-921-PROTOCOL-ATTACK</td>
+      <td style="text-align: left">HTTP 协议攻击检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-930-APPLICATION-ATTACK-LFI</td>
+      <td style="text-align: left">LFI 本地文件包含漏洞检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-931-APPLICATION-ATTACK-RFI</td>
+      <td style="text-align: left">RFI 远程文件包含检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-932-APPLICATION-ATTACK-RCE</td>
+      <td style="text-align: left">RCE 远程命令执行检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-933-APPLICATION-ATTACK-PHP</td>
+      <td style="text-align: left">PHP 攻击检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-941-APPLICATION-ATTACK-XSS</td>
+      <td style="text-align: left">XSS 攻击检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-942-APPLICATION-ATTACK-SQLI</td>
+      <td style="text-align: left">SQL 注入攻击检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION</td>
+      <td style="text-align: left">会话固定攻击检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">REQUEST-949-BLOCKING-EVALUATION</td>
+      <td style="text-align: left">基于风险值检测入站请求</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-950-DATA-LEAKAGES</td>
+      <td style="text-align: left">数据泄漏检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-951-DATA-LEAKAGES-SQL</td>
+      <td style="text-align: left">SQL 数据泄漏检测</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-952-DATA-LEAKAGES-JAVA</td>
+      <td style="text-align: left">JAVA 数据泄漏</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-953-DATA-LEAKAGES-PHP</td>
+      <td style="text-align: left">PHP 数据泄漏</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-954-DATA-LEAKAGES-IIS</td>
+      <td style="text-align: left">IIS 数据泄漏</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-959-BLOCKING-EVALUATION</td>
+      <td style="text-align: left">基于风险值检测出站请求</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-980-CORRELATION</td>
+      <td style="text-align: left">入站、出站风险值关联</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">RESPONSE-999-EXCLUSION-RULES-AFTER-CRS</td>
+      <td style="text-align: left">定制化个人防护规则，重载、更新、移除检测规则</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>如下所示，CRS 支持两种运行模式，CRS 默认采用的为异常评分模式</p>
+
+<ul>
+  <li>异常评分模式，每条防御规则都有相应的风险评分，若匹配成功，则直接累加对应的风险值，当所有规则都匹配完成后比较入站、出站的风险值，若比设定的风险阈值还高，则默认返回 403；</li>
+  <li>检测拦截模式，若请求匹配到了防御规则，则依据所配置的行为进行响应，同时将忽略其后所有的防御规则，该模式节约资源、性能；</li>
+</ul>
+
+<p>若 CRS 要切换成检测拦截模式，需将 <code class="highlighter-rouge">crs-setup.conf</code> 中异常评分模式配置注释，同时开启检测拦截模式配置，如下所示</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>#SecDefaultAction "phase:1,log,auditlog,pass"
+#SecDefaultAction "phase:2,log,auditlog,pass"
+
+SecDefaultAction "phase:1,log,auditlog,deny,status:403"
+SecDefaultAction "phase:2,log,auditlog,deny,status:403"
+</code></pre></div></div>
+
+<p>在异常评分模式中，CRS 包含 规则等级（Paranoia）、异常阈值（Anomaly） 两个量化值，随着规则等级越来越高，其所启用的安全防御规则就越来越多，同时误报也会越来越多，规则等级分为以下几类，规则等级高于 PL2 在审计日志中会输出规则等级标签</p>
+
+<ul>
+  <li>1（PL1），默认风险等级，启用了大部分防御规则，误报较少</li>
+  <li>2（PL2），比 PL1 启用更多防御规则，例如基于正则的 SQL 注入和 XSS，比 PL1 误报多</li>
+  <li>3（PL3），比 PL2 启用更多防御规则，面向经验丰富用户，满足较高安全性场景</li>
+  <li>4（PL4），最严格的风险等级，会产生一定数量的误报</li>
+</ul>
+
+<p>基于异常告警模式，每条检测规则都包含一定的风险值，不同危害风险值不同，如下所示，可根据业务场景自主调整</p>
+
+<ul>
+  <li>CRITICAL，致命，风险值为 5</li>
+  <li>ERROR，错误，风险值为 4</li>
+  <li>WARNING，警告，风险值为 3</li>
+  <li>NOTICE，通知，风险值为 2</li>
+</ul>
+
+<p>根据对 CRS 防御规则的熟知程度慢慢深入，相关异常阈值和规则等级设置可参考下表所示，即异常告警阈值慢慢降低，规则等级慢慢严格</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">阶段编号</th>
+      <th style="text-align: left">阶段名称</th>
+      <th style="text-align: center">异常阈值</th>
+      <th style="text-align: center">规则等级</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">1</td>
+      <td style="text-align: left">初始阶段</td>
+      <td style="text-align: center">高</td>
+      <td style="text-align: center">低</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2</td>
+      <td style="text-align: left">实验阶段</td>
+      <td style="text-align: center">高</td>
+      <td style="text-align: center">高</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">3</td>
+      <td style="text-align: left">标准阶段</td>
+      <td style="text-align: center">低</td>
+      <td style="text-align: center">低</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">4</td>
+      <td style="text-align: left">高安全性阶段</td>
+      <td style="text-align: center">低</td>
+      <td style="text-align: center">高</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ol>
+  <li>如何搭建一个靠谱的WAF <a href="http://www.91ri.org/12766.html">查看原文</a></li>
+  <li>【门神】WAF应用层实现的架构漫谈 <a href="https://security.tencent.com/index.php/blog/msg/63">查看原文</a></li>
+  <li>主流WAF架构分析与探索 <a href="https://security.tencent.com/index.php/blog/msg/56">查看原文</a></li>
+</ol>
+:ET
