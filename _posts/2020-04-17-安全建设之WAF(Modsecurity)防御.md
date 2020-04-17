@@ -4,7 +4,7 @@ title:      安全建设之WAF(Modsecurity)防御
 subtitle:   Modsecurity介绍         
 date:       2020-04-17           
 author:     suleo       
-header-img: img/IMG_0154.JPG   
+header-img: img/IMG_7745.JPG   
 catalog: true                     
 tags:                       
     - 安全
