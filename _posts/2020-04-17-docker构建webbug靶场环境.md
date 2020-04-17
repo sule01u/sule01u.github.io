@@ -1,15 +1,15 @@
- ---
- layout:     post                    # 使用的布局（不需要改）
- title:      构建webug测试环境       # 标题  
- subtitle:   使用docker构建webug靶机环境               # 副标题
- date:       2020-04-17              # 时间
- author:     suleo                   # 作者
- header-img: img/post-bg-keybord.jpg    #这篇文章标题背景图片
- catalog: true                       # 是否归档
- tags:                               #标签
-     - 渗透测试
- ---
-
+ ---  
+ layout:     post             
+ title:      构建webug测试环境     
+ subtitle:   使用docker构建webug靶机环境         
+ date:       2020-04-17             
+ author:     suleo                  
+ header-img: img/post-bg-keybord.jpg    
+ catalog: true                      
+ tags:                              
+     - 渗透测试   
+ ---   
+        
 # 前言
 
 >  WeBug名称定义为”我们的漏洞”靶场环境 ，基础环境是基于PHP/mysql制作搭建而成，中级环境与高级环境分别都是由互联网漏洞事件而收集的漏洞存在的操作环境。在webug3.0发布后的四百多天226安全团队终于在大年初二发布了webug的4.0版本。
