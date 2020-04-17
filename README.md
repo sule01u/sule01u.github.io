@@ -1,58 +1,61 @@
-### 环境
+# 概述
+使用github page和jekyll搭建个人博客(macOS)
 
-如果你安装了 [jekyll](http://jekyllcn.com/)，那你只需要在命令行输入`jekyll serve` 或 `jekyll s`就能在本地浏览器中输入`http://127.0.0.1:4000/`预览主题，对主题的修改也能实时展示（需要强刷浏览器）。
+## 环境准备
+- [jekyll安装文档](https://www.jekyll.com.cn/docs/installation/)
+- [选取你喜欢的博客模版并fork他们的github库到你本地](https://www.jekyll.com.cn/resources/)
+- [创建你的github page,用作博客托管站点](https://guides.github.com/features/pages/)
+- cd到你拉取的仓库,运行:jekyll -s
+- 访问本地站点:127.0.0.1:4000
 
 
 
-### 开始
+### 开始自定义你的博客
 
-你可以通用修改 `_config.yml`文件来轻松的开始搭建自己的博客:
+> 你可以通用修改 `_config.yml`文件来轻松的开始搭建自己的博客:
 
 ```
 # Site settings
-title:    Blog                    # 你的博客网站标题
-SEOTitle: 博客 | Blog		# SEO 标题
-description: "Hey"	   	   # 随便说点，描述一下
+title:    Blog              # 你的博客网站标题
+SEOTitle: Blog		        # SEO 标题
+description: "Hey"	   	    # 随便说点，描述一下
 
 # SNS settings      
-github_username: test    # 你的github账号
+github_username: test       # 你的github账号
 
 # Build settings
 # paginate: 10              # 一页你准备放几篇文章
 ```
 
-Jekyll官方网站还有很多的参数可以调，比如设置文章的链接形式...网址在这里：[Jekyll - Official Site](http://jekyllrb.com/) 中文版的在这里：[Jekyll中文](http://jekyllcn.com/).
-
 ### 撰写博文
 
-要发表的文章一般以 **Markdown** 的格式放在这里`_posts/`，你只要看看这篇模板里的文章你就立刻明白该如何设置。
+> 要发表的文章一般以 **Markdown** 的格式放在这里`_posts/`，你只要看看这篇模板里的文章你就立刻明白该如何设置。
 
 yaml 头文件长这样:
 
 ```
 ---
 layout:     post
-title:      定时器 你真的会使用吗？
-subtitle:   iOS定时器详解
-date:       2016-12-13
-author:     admin
-header-img: img/post-bg-ios9-web.jpg  # 该博客背景
+title:      标题
+subtitle:   副标题
+date:       2020-04-13
+author:     作者      
+header-img: img/xx.jpg  # 该博客背景
 catalog: 	 true   # 是否归档
 tags:               # 标签
-    - iOS
-    - 定时器
+    - 标签名
 ---
 
 ```
 
 ### 侧边栏
-设置是在 `_config.yml`文件里面的`Sidebar settings`那块。
+> 设置是在 `_config.yml`文件里面的`Sidebar settings`那块。
 
 ```
 # Sidebar settings
 sidebar: true  #添加侧边栏
 sidebar-about-description: "简单的描述一下你自己"
-sidebar-avatar: /img/avatar-by.jpg     #你的大头贴，请使用绝对地址.注意：名字区分大小写！后缀名也是
+sidebar-avatar: /img/xx.jpg     #你的头像，请使用绝对地址.注意：名字区分大小写！后缀名也是
 ```
 
 侧边栏是响应式布局的，当屏幕尺寸小于992px的时候，侧边栏就会移动到底部。具体请见bootstrap栅格系统 <http://v3.bootcss.com/css/>
@@ -61,11 +64,6 @@ sidebar-avatar: /img/avatar-by.jpg     #你的大头贴，请使用绝对地址.
 ### Mini About Me
 
 Mini-About-Me 这个模块将在你的头像下面，展示你所有的社交账号。这个也是响应式布局，当屏幕变小时候，会将其移动到页面底部，只不过会稍微有点小变化，具体请看代码。
-
-### Featured Tags
-
-看到这个网站 [Medium](http://medium.com) 的推荐标签非常的炫酷，所以我将他加了进来。
-这个模块现在是独立的，可以呈现在所有页面，包括主页和发表的每一篇文章标题的头上。
 
 ```
 # Featured Tags
@@ -78,18 +76,15 @@ featured-condition-size: 1     # A tag will be featured if the size of it is mor
 内部有一个条件模板 `{% if tag[1].size > {{site.featured-condition-size}} %}` 是用来做筛选过滤的.
 
 ### Social-media Account
-
-在下面输入的社交账号，没有的添加的不会显示在侧边框中。新加入了[简书](https:/www.jianshu.com)链接, <http://www.jianshu.com/u/e71990ada2fd>
-
-	# SNS settings
-	RSS: false
-	jianshu_username: 	jianshu_id 
-	zhihu_username:     username
-	facebook_username:  username
-	github_username:    username
-	# weibo_username:   username
-	
-	
+```
+# SNS settings
+RSS: false
+jianshu_username: 	jianshu_id 
+zhihu_username:     username
+facebook_username:  username
+github_username:    username
+# weibo_username:   username
+```	
 
 ### Friends
 
@@ -101,7 +96,7 @@ featured-condition-size: 1     # A tag will be featured if the size of it is mor
 # Friends
 friends: [
     {
-        title: "BY Blog",
+        title: "张三Blog",
         href: "https://xxxxxx.github.io/"
     },
     {
@@ -115,9 +110,6 @@ friends: [
 ### Keynote Layout
 
 HTML5幻灯片的排版：
-
-![](https://camo.githubusercontent.com/f30347a118171820b46befdf77e7b7c53a5641a9/687474703a2f2f6875616e677875616e2e6d652f696d672f626c6f672d6b65796e6f74652e6a7067)
-
 这部分是用于占用html格式的幻灯片的，一般用到的是 Reveal.js, Impress.js, Slides, Prezi 等等.我认为一个现代化的博客怎么能少了放html幻灯的功能呢~
 
 其主要原理是添加一个 `iframe`，在里面加入外部链接。你可以直接写到头文件里面去，详情请见下面的yaml头文件的写法。
