@@ -1,3 +1,16 @@
+---
+layout:     post                    
+title:      安全建设之WAF(Modsecurity)防御
+subtitle:   Modsecurity介绍         
+date:       2020-04-17           
+author:     suleo       
+header-img: img/IMG_0154.JPG   
+catalog: true                     
+tags:                       
+    - 安全
+---
+# Modsecurity介绍
+
 > WAF (Web Application Firewall)，Web 应用防火墙，通过解析 HTTP/HTTPS 请求内容，并执行一系列的安全检测策略，对目标 Web 应用提供安全防护，同时记录相关安全防御日志。文章将介绍 ModSecurity 相关部署配置概念、防御规则及简单地定制化实践。
 
 ## WAF 概念简述
