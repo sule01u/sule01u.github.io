@@ -1,11 +1,11 @@
 # Site settings
 title: 🌲
-SEOTitle: 🌲的博客  
+SEOTitle: 樹の博客
 #header-img: img/IMG113.jpeg
 header-img: img/background.jpg
 email: shteenlo@gmail.com
-description: "斯人若彩虹 遇上方知有"
-keyword: "月光, Blog, 太阳的博客, 汪树蕾, wangshulei, suleo, iOS, Apple, iPhone"
+description: ""
+keyword: "月光, Blog, 太阳, 汪树蕾, wangshulei, suleo, iOS, Apple, iPhone"
 url: "http://bigtree975.github.io"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
 github_repo: "https://github.com/bigtree975/bigtree975.github.io.git" # you code repository
