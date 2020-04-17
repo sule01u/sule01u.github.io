@@ -1,4 +1,4 @@
-![demo](/Users/shulei/Documents/myblog/img/demo.png)
+![demo](img/demo.png)
 
 
 
