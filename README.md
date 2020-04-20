@@ -167,16 +167,14 @@ iframe:     "http://huangxuan.me/js-module-7day/"
 disqus_username: admin
 ```
 
+
 #### Gitalk
-
 **优点 :** 界面干净简洁, 利用 Github issue API 做的评论插件, 使用 Github 帐号进行登录和评论, 最喜欢的支持 Markdown 语法, 对于程序员来说真是太 cool 了. 
-
 **缺点 : **配置比较繁琐, 每篇文章的评论都需要初始化. 
 
 
 
 ### 统计
-
 网站分析，现在支持百度统计和Google Analytics。需要去官方网站注册一下，然后将返回的code贴在下面：
 
 ```
@@ -189,7 +187,6 @@ ga_domain: xx.xx			     # 默认的是auto,这里我是自定义了的域名,你
 ```
 
 #### Customization
-
 如果你喜欢折腾, 你可以去自定义这个模板的 Code. 
 
 **如果你可以理解 `_include/` 和 `_layouts/`文件夹下的代码(这里是整个界面布局的地方), 你就可以使用 Jekyll 使用的模版引擎 [Liquid](https://github.com/Shopify/liquid/wiki)的语法直接修改/添加代码, 来进行更有创意的自定义界面啦！**
@@ -197,9 +194,7 @@ ga_domain: xx.xx			     # 默认的是auto,这里我是自定义了的域名,你
 
 
 #### Header Image
-
 博客每页的标题底图是可以自己选的, 看看几篇示例post你就知道如何设置了.  
-
 标题底图的选取完全是看个人的审美了, 每一篇文章可以有不同的底图,你想放什么就放什么.  
 
 > 上传的图片最好先压缩，这里推荐 imageOptim 图片压缩软件，让你的博客起飞. 
@@ -209,35 +204,25 @@ ga_domain: xx.xx			     # 默认的是auto,这里我是自定义了的域名,你
 
 
 ### SEO 标题
-
 我的博客标题是 **“树的博客”** 但是我想要在搜索的时候显示 **“树的博客”** , 这个就需要 SEO 标题 来定义了. 
-
 其实这个 SEO Title 就是定义了<head><title>标题</title></head>这个里面的东西和多说分享的标题, 你可以自行修改 . 
 
 
 
-### 关于收到"Page Build Warning"的 Email
-
+### 关于收到"Page Build Warning"的 Email(先删除CNAME文件内容)
 由于jekyll升级到3.0.x,对原来的 pygments 代码高亮不再支持，现只支持一种-rouge，所以你需要在 `_config.yml`文件中修改`highlighter: rouge`.另外还需要在`_config.yml`文件中加上`gems: [jekyll-paginate]`.
-
 同时,你需要更新你的本地 jekyll 环境.
-
 使用`jekyll server`的同学需要这样：
-
 1. `gem update jekyll` # 更新jekyll
 2. `gem update github-pages` #更新依赖的包
-
 使用`bundle exec jekyll server`的同学在更新 jekyll 后，需要输入`bundle update`来更新依赖的包.
-
 > Note：
 > 可以使用 `jekyll -s` 命令在本地实时配置博客，提高效率。详见 [Jekyll.com](http://jekyllcn.com/)
-
 参考文档：[using jekyll with pages](https://help.github.com/articles/using-jekyll-with-pages/) & [Upgrading from 2.x to 3.x](http://jekyllrb.com/docs/upgrading/2-to-3/)
 
 
 
 ## 致谢
-
 1. 这个模板是基于 [qiubaiying](https://github.com/qiubaiying/qiubaiying.github.io)的仓库, 感谢这个作者。 
 2. 感谢 Jekyll、Github Pages 和 Bootstrap!
 
