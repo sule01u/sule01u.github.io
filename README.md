@@ -1,3 +1,5 @@
+[!](img/demo.png)
+
 # 概述
 
 #### 使用github page 和 jekyll 搭建个人博客
