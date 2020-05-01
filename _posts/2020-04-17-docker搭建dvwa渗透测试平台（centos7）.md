@@ -94,8 +94,4 @@ tags:
       
    2. 点击创建数据库
       
-      ![image-20200417220548851](/Users/shulei/Library/Application Support/typora-user-images/image-20200417220548851.png)
-      
    3. 首页
-
-      ![image-20200417220629497](/Users/shulei/Library/Application Support/typora-user-images/image-20200417220629497.png)
