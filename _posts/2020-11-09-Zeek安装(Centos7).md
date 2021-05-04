@@ -1,13 +1,13 @@
 ---
 layout:     post             
-title:      Zeek安装    
-subtitle:   Zeek最方便快捷的安装方式      
+title:      Zeek安装         
 date:       2020-11-05             
 author:     suleo                  
 header-img: img/post-bg-keybord.jpg    
 catalog: true                      
 tags:                              
-    - 渗透测试   
+    - 渗透测试  
+     
 ---  
 
 # Zeek安装指南

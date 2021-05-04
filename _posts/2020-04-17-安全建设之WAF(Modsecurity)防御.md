@@ -1,13 +1,12 @@
 ---
 layout:     post                    
-title:      安全建设之WAF(Modsecurity)防御
-subtitle:   Modsecurity介绍         
+title:      安全建设之WAF(Modsecurity)防御        
 date:       2020-04-17           
 author:     suleo       
 header-img: img/IMG_7745.JPG   
 catalog: true                     
 tags:                       
-    - 安全
+    - 渗透测试
 ---
 # Modsecurity介绍
 

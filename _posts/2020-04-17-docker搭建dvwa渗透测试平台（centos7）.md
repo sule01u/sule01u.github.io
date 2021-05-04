@@ -1,13 +1,12 @@
 ---
 layout:     post             
-title:      构建DVWA测试环境     
-subtitle:   使用docker构建DVWA渗透测试环境         
+title:      构建DVWA测试环境            
 date:       2020-04-17             
 author:     suleo                  
 header-img: img/post-bg-keybord.jpg    
 catalog: true                      
 tags:                              
-    - 渗透测试   
+    - 渗透测试  
 ---  
 
 ## docker搭建dvwa渗透测试平台（centos7）

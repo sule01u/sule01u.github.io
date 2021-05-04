@@ -1,13 +1,13 @@
 ---
 layout:     post             
-title:      构建webug测试环境     
-subtitle:   使用docker构建webug靶机环境         
+title:      构建webug测试环境              
 date:       2020-04-17             
 author:     suleo                  
 header-img: img/IMG_7745.JPG    
 catalog: true                      
 tags:                              
-    - 渗透测试   
+    - 渗透测试 
+
 ---   
         
 # 前言
