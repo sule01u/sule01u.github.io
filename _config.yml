@@ -5,15 +5,15 @@ SEOTitle: 樹の博客
 header-img: img/et.jpg
 email: shteenlo@gmail.com
 description: ""
-keyword: "月光, Blog, 太阳, wangshulei, suleo, iOS, Apple, iPhone"
+keyword: "月亮, Blog, 太阳, wangshulei, suleo, iOS, Apple, iPhone"
 url: "http://bigtree975.github.io"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
 github_repo: "https://github.com/bigtree975/bigtree975.github.io.git" # you code repository
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "奥利给!!!"
-sidebar-avatar: /img/IMG_7717.JPG     # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-about-description: "嘎嘎干!!!"
+sidebar-avatar: /img/mine.jpg     # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
@@ -40,6 +40,7 @@ anchorjs: true                          # if you want to customize anchor. check
 
 # Gems
 # from PR#40, to support local preview for Jekyll 3.0
+plugins: [jekyll-paginate]
 gems: [jekyll-paginate]
 
 
