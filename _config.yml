@@ -13,7 +13,7 @@ github_repo: "https://github.com/bigtree975/bigtree975.github.io.git" # you code
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
 sidebar-about-description: "嘎嘎干!!!"
-sidebar-avatar: /img/mine.jpg     # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-avatar: /img/mine.png     # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
