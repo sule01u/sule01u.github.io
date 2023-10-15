@@ -1,6 +1,6 @@
 ---
 layout:     post             
-title:      SBSCAN
+title:      SBSCAN - 一套带走spring
 date:       2023-10-02            
 author:     sule01u                  
 head-img:   img/sbscan.png
