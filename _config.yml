@@ -5,7 +5,7 @@ SEOTitle: 樹の博客
 header-img: img/et.jpg
 email: shteenlo@gmail.com
 description: ""
-keyword: "月亮, Blog, 太阳, wangshulei, suleo, iOS, Apple, iPhone"
+keyword: "月亮, Blog, 太阳, sule01u, iOS, Apple, iPhone"
 url: "http://bigtree975.github.io"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
 github_repo: "https://github.com/bigtree975/bigtree975.github.io.git" # you code repository
@@ -21,7 +21,7 @@ sidebar-avatar: /img/mine.png     # use absolute URL, seeing it's used in both `
 RSS: false
 #weibo_username:     
 #zhihu_username:     
-github_username:    BigTree975
+github_username:    sule01u
 #facebook_username:  
 #jianshu_username:   
 #twitter_username:   
