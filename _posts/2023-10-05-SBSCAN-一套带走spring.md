@@ -1,6 +1,6 @@
 ---
 layout:     post             
-title:      SBSCAN - 一套带走spring
+title:      SBSCAN - Spring框架综合利用工具
 date:       2023-10-02            
 author:     sule01u                  
 head-img:   img/sbscan.png
@@ -11,7 +11,7 @@ tags:
 
 
 
-# SBSCAN横空出世 - 专打spring各种不服
+# SBSCAN - spring框架综合利用工具
 
 ## 一、SBSCAN
 #### 前情提要：
