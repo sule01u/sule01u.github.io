@@ -3,7 +3,7 @@ layout:     post
 title:      构建webug测试环境              
 date:       2020-04-17             
 author:     suleo                  
-header-img: img/IMG_7745.JPG    
+header-img: img/post-bg-keybord.jpg  
 catalog: true                      
 tags:                              
     - 渗透测试 

@@ -1,14 +1,13 @@
 # Site settings
 title: 樹の博客
 SEOTitle: 樹の博客
-#header-img: img/IMG113.jpeg
 header-img: img/et.jpg
-email: shteenlo@gmail.com
+#email: shteenlo@gmail.com
 description: ""
-keyword: "月亮, Blog, 太阳, sule01u, iOS, Apple, iPhone"
-url: "http://bigtree975.github.io"          # your host, for absolute URL
+keyword: "安全工具, Blog, SBSCAN, sule01u, 渗透测试, SRC挖掘, 漏洞分析, 漏洞扫描"
+url: "http://sule01u.github.io"          # your host, for absolute URL
 baseurl: ""      # for example, '/blog' if your blog hosted on 'host/blog'
-github_repo: "https://github.com/bigtree975/bigtree975.github.io.git" # you code repository
+github_repo: "https://github.com/sule01u/SBSCAN" # you code repository
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
@@ -24,7 +23,7 @@ RSS: false
 github_username:    sule01u
 #facebook_username:  
 #jianshu_username:   
-#twitter_username:   
+twitter_username:   sule01u
 
 
 
