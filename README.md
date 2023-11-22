@@ -1,4 +1,4 @@
-![!](img/demo.png)
+![demo](https://p.ipic.vip/atjidq.png)
 
 # 概述
 
@@ -223,5 +223,4 @@ ga_domain: xx.xx			     # 默认的是auto,这里我是自定义了的域名,你
 ## 致谢
 1. 这个模板是基于 [qiubaiying](https://github.com/qiubaiying/qiubaiying.github.io)的仓库, 感谢这个作者。 
 2. 感谢 Jekyll、Github Pages 和 Bootstrap!
-
 
