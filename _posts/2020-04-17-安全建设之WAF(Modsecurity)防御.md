@@ -156,7 +156,7 @@ SecRule ARGS:testparam "@contains test" "id:1234,deny,status:403"
 
 `ModSecurity` 规则测试如下图所示，当携带参数 `?testparam=test` 发起请求时，请求被拒绝
 
-![img](https://l0gs.xf0rk.space/2018/12/21/step-into-modsecurity/modsecurity_testparam_demo.png)
+![image-20231128132745549](https://p.ipic.vip/t38s2y.png)
 
 ## ModSecurity 配置简介
 
@@ -297,7 +297,7 @@ Include "/usr/local/nginx/conf/modsec/rules/*.conf"
 
 > 需注意 ModSecurity CRS 规则默认将本机加入白名单，所以直接通过 `curl http://localhost?id=1'or'1=1` 测试是无法触发 CRS 防御规则。
 
-![img](https://l0gs.xf0rk.space/2018/12/21/step-into-modsecurity/modsecurity_crs.png)
+![image-20231128132745549](https://p.ipic.vip/t38s2y.png)
 
 触发 `REQUEST-920-PROTOCOL-ENFORCEMENT`、`REQUEST-942-APPLICATION-ATTACK-SQLI.conf` 等规则检测，并且被默认拦截，其匹配记录如下所示
 
