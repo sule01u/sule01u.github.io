@@ -58,7 +58,7 @@ kramdown:
 
 # 评论系统
 # Disqus（https://disqus.com/）
-disqus_username: suleo975
+#disqus_username: suleo975
 
 # Gitalk
 #gitalk:
